@@ -57,9 +57,24 @@ namespace SqlExcelDoc.Model
             return result;
         }
 
-        public override void GenerateDatabaseStoredProcedureSpecifications(IWorkbook workbook)
+        public override IEnumerable<ProcedureSpecifications> GetStoredProcedureSpecifications()
         {
-            throw new NotImplementedException();
+            // 檢視表
+            var sql = @"SELECT
+                    SCHEMA_NAME(p.schema_id) + '.' + p.name as ProcedureName,
+                    ep.value AS Description
+                FROM
+                    sys.procedures p
+                LEFT JOIN
+                    sys.extended_properties ep ON p.object_id = ep.major_id
+                    AND ep.minor_id = 0
+                    AND ep.name = 'MS_Description'
+                WHERE
+                    p.is_ms_shipped = 0
+                ORDER BY
+                    ProcedureName;";
+            var result = _connection.Query<ProcedureSpecifications>(sql);
+            return result;
         }
 
         public override IEnumerable<TableSpecifications> GetTableSpecifications()

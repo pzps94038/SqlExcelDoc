@@ -1,4 +1,5 @@
 ﻿using NPOI.POIFS.Crypt;
+using NPOI.POIFS.Crypt.Agile;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
@@ -61,10 +62,22 @@ namespace SqlExcelDoc
                 var databaseViewSpecifications = sqlDoc.GetDatabaseViewSpecifications();
                 GenerateDatabaseSpecifications(workbook, databaseSpecifications, databaseViewSpecifications);
                 PrintMessage("產生資料庫規格完成...");
+                PrintMessage("產生預存程序規格中...");
+                var storedProcedureSpecifications = sqlDoc.GetStoredProcedureSpecifications();
+                if (storedProcedureSpecifications.Any())
+                {
+                    GenerateProcedureSpecifications(workbook, storedProcedureSpecifications);
+                    PrintMessage("產生預存程序規格完成...");
+                }
+                else
+                {
+                    PrintMessage("無任何預存程序...");
+                }
                 PrintMessage("產生表格規格中...");
                 var tableSpecifications = sqlDoc.GetTableSpecifications();
                 GenerateDatabaseSpecifications(workbook, tableSpecifications);
                 PrintMessage("產生表格規格完成...");
+               
                 FileStream sw = File.Create(fileName);
                 workbook.Write(sw);
                 sw.Close();
@@ -89,9 +102,6 @@ namespace SqlExcelDoc
         /// <summary>
         /// 產生資料庫表格清單
         /// </summary>
-        /// <param name="workbook"></param>
-        /// <param name="tableResult"></param>
-        /// <param name="viewResult"></param>
         private static void GenerateDatabaseSpecifications(IWorkbook workbook, IEnumerable<DatabaseSpecifications> databaseSpecifications, IEnumerable<DatabaseSpecifications> databaseViewSpecifications) 
         {
             var sheet = workbook.CreateSheet("表格清單目錄");
@@ -141,9 +151,6 @@ namespace SqlExcelDoc
         /// <summary>
         /// 產生資料庫表格細項
         /// </summary>
-        /// <param name="workbook"></param>
-        /// <param name="tableResult"></param>
-        /// <param name="viewResult"></param>
         private static void GenerateDatabaseSpecifications(IWorkbook workbook, IEnumerable<TableSpecifications> tableSpecifications)
         {
             var group = tableSpecifications.GroupBy(a => a.TableName);
@@ -207,5 +214,32 @@ namespace SqlExcelDoc
                 sheet.AutoSheetSize(6);
             }
         }
+
+        /// <summary>
+        /// 產生預存程序細項
+        /// </summary>
+        private static void GenerateProcedureSpecifications(IWorkbook workbook, IEnumerable<ProcedureSpecifications> storedProcedureSpecifications)
+        {
+            var sheet = workbook.CreateSheet("預存程序清單目錄");
+            var headerRow = sheet.CreateRow(0);
+            headerRow.CreateHeaderStyleCell(0).SetCellValue("項次");
+            headerRow.CreateHeaderStyleCell(1).SetCellValue("預存程序名稱");
+            headerRow.CreateHeaderStyleCell(2).SetCellValue("描述");
+            int i = 1;
+            foreach (var item in storedProcedureSpecifications)
+            {
+                var row = sheet.CreateRow(i);
+                i++;
+                row.CreateContentStyleCell(0).SetCellValue(i - 1);
+                row.CreateContentStyleCell(1).SetCellValue((item.ProcedureName as string) ?? "");
+                row.CreateContentStyleCell(2).SetCellValue((item.Description as string) ?? "");
+            }
+            CellRangeAddress filterRange = new CellRangeAddress(0, i, 0, 2);
+            // 在工作表上設置自動篩選的範圍
+            sheet.SetAutoFilter(filterRange);
+            sheet.AutoSheetSize(6);
+            
+        }
+
     }
 }

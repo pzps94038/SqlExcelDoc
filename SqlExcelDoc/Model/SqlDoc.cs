@@ -21,7 +21,7 @@ namespace SqlExcelDoc.Model
 
         public abstract IEnumerable<DatabaseSpecifications> GetDatabaseSpecifications();
         public abstract IEnumerable<DatabaseSpecifications> GetDatabaseViewSpecifications();
-        public abstract void GenerateDatabaseStoredProcedureSpecifications(IWorkbook workbook);
+        public abstract IEnumerable<ProcedureSpecifications> GetStoredProcedureSpecifications();
         public abstract IEnumerable<TableSpecifications> GetTableSpecifications();
         public abstract void GenerateDatabaseTriggerSpecifications(IWorkbook workbook);
     }
