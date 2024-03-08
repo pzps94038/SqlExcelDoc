@@ -73,6 +73,17 @@ namespace SqlExcelDoc
                 {
                     PrintMessage("無任何預存程序...");
                 }
+                PrintMessage("產生Trigger規格中...");
+                var triggerSpecifications = sqlDoc.GetTriggerSpecifications();
+                if (triggerSpecifications.Any())
+                {
+                    GenerateProcedureSpecifications(workbook, storedProcedureSpecifications);
+                    PrintMessage("產生Trigger規格完成...");
+                }
+                else
+                {
+                    PrintMessage("無任何Trigger...");
+                }
                 PrintMessage("產生表格規格中...");
                 var tableSpecifications = sqlDoc.GetTableSpecifications();
                 GenerateDatabaseSpecifications(workbook, tableSpecifications);
@@ -237,9 +248,34 @@ namespace SqlExcelDoc
             CellRangeAddress filterRange = new CellRangeAddress(0, i, 0, 2);
             // 在工作表上設置自動篩選的範圍
             sheet.SetAutoFilter(filterRange);
-            sheet.AutoSheetSize(6);
-            
+            sheet.AutoSheetSize(2);
         }
 
+        /// <summary>
+        /// 產生預存程序細項
+        /// </summary>
+        private static void GenerateTriggerSpecifications(IWorkbook workbook, IEnumerable<TriggerSpecifications> triggerSpecifications)
+        {
+            var sheet = workbook.CreateSheet("Trigger清單目錄");
+            var headerRow = sheet.CreateRow(0);
+            headerRow.CreateHeaderStyleCell(0).SetCellValue("項次");
+            headerRow.CreateHeaderStyleCell(1).SetCellValue("觸發表格名稱");
+            headerRow.CreateHeaderStyleCell(2).SetCellValue("Trigger名稱");
+            headerRow.CreateHeaderStyleCell(3).SetCellValue("TypeDesc");
+            int i = 1;
+            foreach (var item in triggerSpecifications)
+            {
+                var row = sheet.CreateRow(i);
+                i++;
+                row.CreateContentStyleCell(0).SetCellValue(i - 1);
+                row.CreateContentStyleCell(1).SetCellValue((item.TableName as string) ?? "");
+                row.CreateContentStyleCell(2).SetCellValue((item.TriggerName as string) ?? "");
+                row.CreateContentStyleCell(3).SetCellValue((item.TypeDesc as string) ?? "");
+            }
+            CellRangeAddress filterRange = new CellRangeAddress(0, i, 0, 3);
+            // 在工作表上設置自動篩選的範圍
+            sheet.SetAutoFilter(filterRange);
+            sheet.AutoSheetSize(3);
+        }
     }
 }

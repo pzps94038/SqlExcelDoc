@@ -79,7 +79,6 @@ namespace SqlExcelDoc.Model
 
         public override IEnumerable<TableSpecifications> GetTableSpecifications()
         {
-            //// 一般表格
             var sql = @"SELECT
                 t.TABLE_SCHEMA + '.' + t.TABLE_NAME AS TableName,
                 c.COLUMN_NAME as ColumnName,
@@ -116,9 +115,24 @@ namespace SqlExcelDoc.Model
             return result;
         }
 
-        public override void GenerateDatabaseTriggerSpecifications(IWorkbook workbook)
+        public override IEnumerable<TriggerSpecifications> GetTriggerSpecifications()
         {
-            throw new NotImplementedException();
+            var sql = @"SELECT 
+                s.name + '.' + t.name AS TableName,
+                tr.name AS TriggerName,
+                tr.type_desc AS TypeDesc
+                FROM 
+                    sys.triggers tr
+                INNER JOIN 
+                    sys.tables t ON tr.parent_id = t.object_id
+                INNER JOIN 
+                    sys.schemas s ON t.schema_id = s.schema_id -- 加入sys.schemas视图来获取架构名
+                ORDER BY 
+                    TableName, 
+                    TriggerName;
+            ";
+            var result = _connection.Query<TriggerSpecifications>(sql);
+            return result;
         }
 
         public override void Dispose()

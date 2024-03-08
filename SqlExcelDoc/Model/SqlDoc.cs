@@ -23,7 +23,7 @@ namespace SqlExcelDoc.Model
         public abstract IEnumerable<DatabaseSpecifications> GetDatabaseViewSpecifications();
         public abstract IEnumerable<ProcedureSpecifications> GetStoredProcedureSpecifications();
         public abstract IEnumerable<TableSpecifications> GetTableSpecifications();
-        public abstract void GenerateDatabaseTriggerSpecifications(IWorkbook workbook);
+        public abstract IEnumerable<TriggerSpecifications> GetTriggerSpecifications();
     }
 
 }
