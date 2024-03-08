@@ -77,7 +77,7 @@ namespace SqlExcelDoc
                 var triggerSpecifications = sqlDoc.GetTriggerSpecifications();
                 if (triggerSpecifications.Any())
                 {
-                    GenerateProcedureSpecifications(workbook, storedProcedureSpecifications);
+                    GenerateTriggerSpecifications(workbook, triggerSpecifications);
                     PrintMessage("產生Trigger規格完成...");
                 }
                 else
