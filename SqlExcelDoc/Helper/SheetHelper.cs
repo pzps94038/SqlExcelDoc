@@ -31,7 +31,7 @@ namespace SqlExcelDoc.Helper
                         }
                     }
                 }
-                columnWidth = (columnWidth + 5) * 256;
+                columnWidth = (columnWidth + 8) * 256;
                 int maxColumnWidth = 255 * 256; // The maximum column width for an individual cell is 255 characters
                 if (columnWidth > maxColumnWidth)
                 {

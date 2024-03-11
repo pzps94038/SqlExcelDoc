@@ -176,7 +176,12 @@ namespace SqlExcelDoc
             foreach (var keyPair in group) 
             {
                 var sheet = workbook.CreateSheet(keyPair.Key);
-                var headerRow = sheet.CreateRow(0);
+                var titleRow = sheet.CreateRow(0);
+                var titleCellStyle = new CellStyle();
+                titleCellStyle.IsBold = true;
+                titleRow.CreateStyleCell(0, titleCellStyle).SetCellValue("表格名稱");
+                titleRow.CreateStyleCell(1, titleCellStyle).SetCellValue(keyPair.Key);
+                var headerRow = sheet.CreateRow(1);
                 headerRow.CreateStyleCell(0, headerStyle).SetCellValue("項次");
                 headerRow.CreateStyleCell(1, headerStyle).SetCellValue("欄位名稱");
                 headerRow.CreateStyleCell(2, headerStyle).SetCellValue("型態");
@@ -187,7 +192,7 @@ namespace SqlExcelDoc
                 headerRow.CreateStyleCell(7, headerStyle).SetCellValue("外鍵表格名");
                 headerRow.CreateStyleCell(8, headerStyle).SetCellValue("外鍵欄位名");
                 headerRow.CreateStyleCell(9, headerStyle).SetCellValue("描述");
-                int i = 1;
+                int i = 2;
                 foreach (var item in keyPair.ToList()) 
                 {
                     var row = sheet.CreateRow(i);
@@ -229,7 +234,7 @@ namespace SqlExcelDoc
                     row.CreateStyleCell(9, cellStyle).SetCellValue((item.Description as string) ?? "");
 
                 }
-                CellRangeAddress filterRange = new CellRangeAddress(0, i, 0, 9);
+                CellRangeAddress filterRange = new CellRangeAddress(1, i, 0, 9);
 
                 // 在工作表上設置自動篩選的範圍
                 sheet.SetAutoFilter(filterRange);
