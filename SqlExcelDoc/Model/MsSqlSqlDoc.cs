@@ -33,7 +33,8 @@ namespace SqlExcelDoc.Model
                     WHERE 
 	                    is_ms_shipped = 0 
 	                    AND parent_object_id = 0
-                        AND type_desc = 'USER_TABLE'";
+                        AND type_desc = 'USER_TABLE'
+                        ORDER BY TableName";
             var result = _connection.Query<DatabaseSpecifications>(sql);
             return result;
         }
@@ -52,7 +53,8 @@ namespace SqlExcelDoc.Model
                     WHERE 
 	                    is_ms_shipped = 0 
 	                    AND parent_object_id = 0
-                        AND type_desc = 'VIEW'";
+                        AND type_desc = 'VIEW'
+                        ORDER BY TableName";
             var result = _connection.Query<DatabaseSpecifications>(sql);
             return result;
         }
@@ -79,37 +81,55 @@ namespace SqlExcelDoc.Model
 
         public override IEnumerable<TableSpecifications> GetTableSpecifications()
         {
-            var sql = @"SELECT
-                t.TABLE_SCHEMA + '.' + t.TABLE_NAME AS TableName,
-                c.COLUMN_NAME as ColumnName,
-                c.DATA_TYPE as DataType,
-                CASE 
-				    WHEN c.IS_NULLABLE = 'YES' THEN ''
-				    WHEN c.IS_NULLABLE = 'NO' THEN 'Y'
-				    ELSE ''
-				END as NotNull,
-                c.CHARACTER_MAXIMUM_LENGTH as Length,
-                CASE 
-				    WHEN k.CONSTRAINT_TYPE = 'PRIMARY KEY' THEN 'PRIMARY KEY'
-				    WHEN k.CONSTRAINT_TYPE = 'FOREIGN KEY' THEN 'FOREIGN KEY'
-				    ELSE ''
-				END as ConstraintType,
-                CASE WHEN k.CONSTRAINT_TYPE = 'UNIQUE' THEN 'Y' ELSE 'N' END as IsUnique,
-                ISNULL(ep.value, '') AS Description
-                FROM 
-                    INFORMATION_SCHEMA.TABLES t
-                INNER JOIN 
-                    INFORMATION_SCHEMA.COLUMNS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
-                LEFT JOIN 
-                    INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu ON c.TABLE_SCHEMA = ccu.TABLE_SCHEMA AND c.TABLE_NAME = ccu.TABLE_NAME AND c.COLUMN_NAME = ccu.COLUMN_NAME
-                LEFT JOIN 
-                    INFORMATION_SCHEMA.TABLE_CONSTRAINTS k ON ccu.CONSTRAINT_SCHEMA = k.CONSTRAINT_SCHEMA AND ccu.CONSTRAINT_NAME = k.CONSTRAINT_NAME
-               	LEFT JOIN 
-    				sys.extended_properties ep ON ep.major_id = OBJECT_ID(t.TABLE_SCHEMA + '.' + t.TABLE_NAME) AND ep.minor_id = c.ORDINAL_POSITION AND ep.name = 'MS_Description'
-                WHERE 
-                    t.TABLE_TYPE = 'BASE TABLE'
-                ORDER BY 
-                    t.TABLE_NAME, k.CONSTRAINT_TYPE DESC
+            var sql = @"
+                    SELECT
+                    t.TABLE_SCHEMA + '.' + t.TABLE_NAME AS TableName,
+                    c.COLUMN_NAME AS ColumnName,
+                    c.DATA_TYPE AS DataType,
+                    CASE 
+                        WHEN c.IS_NULLABLE = 'YES' THEN 'N'
+                        WHEN c.IS_NULLABLE = 'NO' THEN 'Y'
+                        ELSE 'N'
+                    END AS NotNull,
+                    c.CHARACTER_MAXIMUM_LENGTH AS Length,
+                    ISNULL(ep.value, '') AS Description,
+                    MAX(CASE WHEN k.CONSTRAINT_TYPE = 'UNIQUE' THEN 'Y' ELSE 'N' END) AS IsUnique,
+                    MAX(CASE WHEN k.CONSTRAINT_TYPE = 'PRIMARY KEY' THEN 'Y' ELSE 'N' END) AS IsPrimaryKey,
+                    MAX(CASE WHEN k.CONSTRAINT_TYPE = 'FOREIGN KEY' THEN 'Y' ELSE 'N' END) AS IsForeignKey,
+                    (fk.TABLE_SCHEMA + '.' + fk.REFERENCED_TABLE_NAME) AS ReferencedTableName,
+                    fk.REFERENCED_COLUMN_NAME AS ReferencedColumnName
+                    FROM 
+                        INFORMATION_SCHEMA.TABLES t
+                    INNER JOIN 
+                        INFORMATION_SCHEMA.COLUMNS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
+                    LEFT JOIN 
+                        sys.extended_properties ep ON ep.major_id = OBJECT_ID(t.TABLE_SCHEMA + '.' + t.TABLE_NAME) AND ep.minor_id = c.ORDINAL_POSITION AND ep.name = 'MS_Description'
+                    LEFT JOIN 
+                        INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu ON c.TABLE_SCHEMA = ccu.TABLE_SCHEMA AND c.TABLE_NAME = ccu.TABLE_NAME AND c.COLUMN_NAME = ccu.COLUMN_NAME
+                    LEFT JOIN 
+                        INFORMATION_SCHEMA.TABLE_CONSTRAINTS k ON ccu.CONSTRAINT_SCHEMA = k.CONSTRAINT_SCHEMA AND ccu.CONSTRAINT_NAME = k.CONSTRAINT_NAME
+                    LEFT JOIN 
+                        (SELECT 
+                            rc.CONSTRAINT_SCHEMA,
+                            rc.CONSTRAINT_NAME,
+                            kcu.TABLE_SCHEMA,
+                            kcu.TABLE_NAME,
+                            kcu.COLUMN_NAME,
+                            kcu2.TABLE_NAME AS REFERENCED_TABLE_NAME,
+                            kcu2.COLUMN_NAME AS REFERENCED_COLUMN_NAME
+                         FROM 
+                            INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+                         INNER JOIN 
+                            INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu ON kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+                         INNER JOIN 
+                            INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu2 ON kcu2.CONSTRAINT_NAME = rc.UNIQUE_CONSTRAINT_NAME AND kcu2.CONSTRAINT_SCHEMA = rc.UNIQUE_CONSTRAINT_SCHEMA
+                        ) AS fk ON fk.TABLE_SCHEMA = c.TABLE_SCHEMA AND fk.TABLE_NAME = c.TABLE_NAME AND fk.COLUMN_NAME = c.COLUMN_NAME
+                    WHERE 
+                        t.TABLE_TYPE = 'BASE TABLE'
+                    GROUP BY
+                        t.TABLE_SCHEMA, t.TABLE_NAME, c.COLUMN_NAME, c.DATA_TYPE, c.IS_NULLABLE, c.CHARACTER_MAXIMUM_LENGTH, ep.value, (fk.TABLE_SCHEMA + '.' + fk.REFERENCED_TABLE_NAME), fk.REFERENCED_COLUMN_NAME
+                    ORDER BY 
+                        TableName, IsPrimaryKey DESC, IsForeignKey DESC, ColumnName
             ";
             var result = _connection.Query<TableSpecifications>(sql);
             return result;
