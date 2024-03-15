@@ -205,7 +205,7 @@ namespace SqlExcelDoc
                         cellStyle.FillForegroundColor = IndexedColors.Yellow.Index;
                         referencedTableNameCellStyle.FillForegroundColor = IndexedColors.Yellow.Index;
                     }
-                    row.CreateStyleCell(0, cellStyle).SetCellValue(i - 1);
+                    row.CreateStyleCell(0, cellStyle).SetCellValue(i - 2);
                     row.CreateStyleCell(1, cellStyle).SetCellValue((item.ColumnName as string) ?? "");
                     row.CreateStyleCell(2, cellStyle).SetCellValue((item.DataType as string).ToUpper() ?? "");
                     var len = ((item.Length as string) ?? "") == "-1" ? "MAX" : ((item.Length as string) ?? "");
