@@ -89,14 +89,18 @@ namespace SqlExcelDoc
                 var tableSpecifications = sqlDoc.GetTableSpecifications();
                 GenerateDatabaseSpecifications(workbook, tableSpecifications);
                 PrintMessage("產生表格規格完成...");
-               
+
                 FileStream sw = File.Create(fileName);
                 workbook.Write(sw);
                 sw.Close();
                 sqlDoc.Dispose();
                 PrintMessage("文件已產生完成...");
             }
-            catch (Exception ex) 
+            catch (ArgumentException ex)
+            {
+                PrintMessage("資料表名稱過長...超出限制31字符");
+            }
+            catch (Exception ex)
             {
                 PrintMessage("發生錯誤" + ex.Message);
             }
@@ -106,7 +110,7 @@ namespace SqlExcelDoc
         /// 輸出訊息包含時間
         /// </summary>
         /// <param name="msg"></param>
-        private static void PrintMessage(string msg) 
+        private static void PrintMessage(string msg)
         {
             Console.WriteLine(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + " " + msg);
         }
@@ -114,7 +118,7 @@ namespace SqlExcelDoc
         /// <summary>
         /// 產生資料庫表格清單
         /// </summary>
-        private static void GenerateDatabaseSpecifications(IWorkbook workbook, IEnumerable<DatabaseSpecifications> databaseSpecifications, IEnumerable<DatabaseSpecifications> databaseViewSpecifications) 
+        private static void GenerateDatabaseSpecifications(IWorkbook workbook, IEnumerable<DatabaseSpecifications> databaseSpecifications, IEnumerable<DatabaseSpecifications> databaseViewSpecifications)
         {
             var sheet = workbook.CreateSheet("表格清單目錄");
             // 表頭
@@ -127,7 +131,7 @@ namespace SqlExcelDoc
             headerRow.CreateStyleCell(0, headerStyle).SetCellValue("項次");
             headerRow.CreateStyleCell(1, headerStyle).SetCellValue("表格名稱");
             headerRow.CreateStyleCell(2, headerStyle).SetCellValue("描述");
-            
+
             int i = 1;
             foreach (var item in databaseSpecifications)
             {
@@ -173,7 +177,7 @@ namespace SqlExcelDoc
             headerStyle.FontColor = IndexedColors.White.Index;
             headerStyle.FillForegroundColor = IndexedColors.RoyalBlue.Index;
             var group = tableSpecifications.GroupBy(a => a.TableName);
-            foreach (var keyPair in group) 
+            foreach (var keyPair in group)
             {
                 var sheet = workbook.CreateSheet(keyPair.Key);
                 var titleRow = sheet.CreateRow(0);
@@ -193,7 +197,7 @@ namespace SqlExcelDoc
                 headerRow.CreateStyleCell(8, headerStyle).SetCellValue("外鍵欄位名");
                 headerRow.CreateStyleCell(9, headerStyle).SetCellValue("描述");
                 int i = 2;
-                foreach (var item in keyPair.ToList()) 
+                foreach (var item in keyPair.ToList())
                 {
                     var row = sheet.CreateRow(i);
                     i++;
@@ -225,7 +229,7 @@ namespace SqlExcelDoc
                         };
                         referencedTableNameCell.Hyperlink = hyperlink;
                     }
-                    else 
+                    else
                     {
                         referencedTableNameCell = row.CreateStyleCell(7, cellStyle);
                     }
@@ -284,7 +288,7 @@ namespace SqlExcelDoc
             headerStyle.IsBold = true;
             headerStyle.FontColor = IndexedColors.White.Index;
             headerStyle.FillForegroundColor = IndexedColors.RoyalBlue.Index;
-            headerRow.CreateStyleCell(0 , headerStyle).SetCellValue("項次");
+            headerRow.CreateStyleCell(0, headerStyle).SetCellValue("項次");
             headerRow.CreateStyleCell(1, headerStyle).SetCellValue("觸發表格名稱");
             headerRow.CreateStyleCell(2, headerStyle).SetCellValue("Trigger名稱");
             headerRow.CreateStyleCell(3, headerStyle).SetCellValue("TypeDesc");
