@@ -26,31 +26,29 @@ namespace SqlExcelDoc
         public static void CreateDocumentation(
             [Required(Description = "連線字串")] string connection,
             [Required(Description = "輸出路徑")] string fileName,
-            [Optional("MsSql", Description = "資料庫格式")] string type,
-            [Optional("y", Description = "如果已存在是否覆蓋")] string overwriteString
+            [Required(Description = "資料庫格式")] string type
             )
         {
             try
             {
                 SqlDoc sqlDoc;
                 var upperType = type.ToUpper();
-                var overwrite = overwriteString.ToUpper() == "Y";
                 switch (upperType)
                 {
                     case "MSSQL":
-                        sqlDoc = new MsSqlSqlDoc(connection);
+                        sqlDoc = new MsSqlDoc(connection);
+                        break;
+                    case "MYSQL":
+                        sqlDoc = new MySqlDoc(connection);
                         break;
                     default:
                         PrintMessage("不支援的資料庫類型");
                         return;
                 }
                 var isExists = File.Exists(fileName);
-                if (overwrite)
+                if (isExists)
                 {
-                    if (isExists)
-                    {
-                        File.Delete(fileName);
-                    }
+                    File.Delete(fileName);
                 }
                 else
                 {
