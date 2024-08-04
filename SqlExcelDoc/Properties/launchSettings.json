@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "SqlExcelDoc": {
-      "commandName": "Project",
-      "commandLineArgs": "\"data source=192.168.200.203;initial catalog=KNSH_QBMS;user id=sa;password=@esunergy.COM;MultipleActiveResultSets=True;encrypt=false;\" D:\\SqlExcelDoc\\SqlExcelDoc.xlsx"
-    }
-  }
-}
